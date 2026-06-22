@@ -16,8 +16,8 @@ const storySchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   category: z.string().min(2, "Category is required"),
-  price_mwk: z.coerce.number().min(0, "Price cannot be negative"),
-  is_locked: z.boolean().default(false),
+  price_mwk: z.number().min(0, "Price cannot be negative"), // Changed to z.number()
+  is_locked: z.boolean(),
 });
 
 type StoryForm = z.infer<typeof storySchema>;
@@ -89,19 +89,37 @@ export default function EditStoryPage() {
       const doc = parser.parseFromString(html, 'text/html');
       const elements = Array.from(doc.body.children);
 
-      let chapters: Chapter[] = [];
+      const chapters: Chapter[] = [];
       let currentChapter: Chapter | null = null;
 
-      elements.forEach((el: any) => {
+      // Using a standard for...of loop fixes the TypeScript 'never' bug
+      for (const el of elements) {
         if (el.tagName === 'H1' || el.tagName === 'H2') {
-          if (currentChapter && currentChapter.paragraphs.length > 0) chapters.push(currentChapter);
-          currentChapter = { id: crypto.randomUUID(), title: el.textContent || 'Untitled', paragraphs: [] };
+          if (currentChapter && currentChapter.paragraphs.length > 0) {
+            chapters.push(currentChapter);
+          }
+          currentChapter = { 
+            id: crypto.randomUUID(), 
+            title: el.textContent || 'Untitled', 
+            paragraphs: [] 
+          };
         } else {
-          if (!currentChapter) currentChapter = { id: crypto.randomUUID(), title: 'Prologue', paragraphs: [] };
-          if (el.textContent.trim()) currentChapter.paragraphs.push(el.textContent.trim());
+          if (!currentChapter) {
+            currentChapter = { 
+              id: crypto.randomUUID(), 
+              title: 'Prologue', 
+              paragraphs: [] 
+            };
+          }
+          if (currentChapter && el.textContent?.trim()) {
+            currentChapter.paragraphs.push(el.textContent.trim());
+          }
         }
-      });
-      if (currentChapter && currentChapter.paragraphs.length > 0) chapters.push(currentChapter);
+      }
+
+      if (currentChapter && currentChapter.paragraphs.length > 0) {
+        chapters.push(currentChapter);
+      }
 
       setExtractedChapters(chapters);
       setSelectedChapterIds(chapters.map(c => c.id));
@@ -207,7 +225,8 @@ export default function EditStoryPage() {
           </div>
           <div>
             <label className="text-sm font-medium text-gray-light/80 mb-2 block">Price (MWK)</label>
-            <input type="number" {...register("price_mwk")} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" />
+            {/* Added { valueAsNumber: true } to fix the TypeScript error */}
+            <input type="number" {...register("price_mwk", { valueAsNumber: true })} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" />
           </div>
         </div>
 

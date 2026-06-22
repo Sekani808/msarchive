@@ -16,8 +16,8 @@ const storySchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   category: z.string().min(2, "Category is required"),
-  price_mwk: z.coerce.number().min(0, "Price cannot be negative"),
-  is_locked: z.boolean().default(false),
+  price_mwk: z.number().min(0, "Price cannot be negative"),
+  is_locked: z.boolean(),
 });
 
 type StoryForm = z.infer<typeof storySchema>;
@@ -45,11 +45,13 @@ export default function NewStoryPage() {
   // Function to extract chapters from DOCX
     // Function to extract chapters from DOCX
     // Function to extract chapters from DOCX
+  // 2. Parse new DOCX if uploaded
+  // 2. Parse new DOCX if uploaded
   const handleDocxChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setDocxFile(file);
-    setIsParsing(true);
+    setIsParsing(true); 
 
     try {
       const arrayBuffer = await file.arrayBuffer();
@@ -60,24 +62,20 @@ export default function NewStoryPage() {
       const doc = parser.parseFromString(html, 'text/html');
       const elements = Array.from(doc.body.children);
 
-      let chapters: Chapter[] = [];
+      const chapters: Chapter[] = [];
       let currentChapter: Chapter | null = null;
 
-      elements.forEach((el: any) => {
-        // If it's a heading, start a new chapter
+      for (const el of elements) {
         if (el.tagName === 'H1' || el.tagName === 'H2') {
-          // Save the previous chapter ONLY if it has content
           if (currentChapter && currentChapter.paragraphs.length > 0) {
             chapters.push(currentChapter);
           }
-          // Create new chapter (but DON'T push yet)
           currentChapter = { 
             id: crypto.randomUUID(), 
-            title: el.textContent || 'Untitled Chapter', 
+            title: el.textContent || 'Untitled', 
             paragraphs: [] 
           };
         } else {
-          // If no chapter exists yet, create a Prologue (but DON'T push yet)
           if (!currentChapter) {
             currentChapter = { 
               id: crypto.randomUUID(), 
@@ -85,31 +83,25 @@ export default function NewStoryPage() {
               paragraphs: [] 
             };
           }
-          // Add text to current chapter
-          if (el.textContent.trim()) {
+          if (currentChapter && el.textContent?.trim()) {
             currentChapter.paragraphs.push(el.textContent.trim());
           }
         }
-      });
+      }
 
-      // Save the very last chapter
       if (currentChapter && currentChapter.paragraphs.length > 0) {
         chapters.push(currentChapter);
       }
 
       setExtractedChapters(chapters);
       setSelectedChapterIds(chapters.map(c => c.id));
-      toast.success(`Found ${chapters.length} chapters!`);
-
+      toast.success(`Parsed ${chapters.length} new chapters!`);
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to parse DOCX. Make sure it's a valid Word file.");
-      setDocxFile(null);
+      toast.error("Failed to parse DOCX.");
     } finally {
       setIsParsing(false);
     }
   };
-
   const toggleChapter = (id: string) => {
     setSelectedChapterIds(prev => 
       prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id]
