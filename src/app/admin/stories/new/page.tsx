@@ -40,6 +40,10 @@ export default function NewStoryPage() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<StoryForm>({
     resolver: zodResolver(storySchema),
+    defaultValues: {
+      price_mwk: 0,
+      is_locked: false,
+    },
   });
 
   // Function to extract chapters from DOCX
@@ -191,7 +195,7 @@ export default function NewStoryPage() {
           </div>
           <div>
             <label className="text-sm font-medium text-gray-light/80 mb-2 block">Price (MWK) - 0 for Free</label>
-            <input type="number" {...register("price_mwk")} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" placeholder="0" />
+            <input type="number" {...register("price_mwk", { valueAsNumber: true })} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" placeholder="0" />
           </div>
         </div>
 
