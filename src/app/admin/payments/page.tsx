@@ -3,14 +3,14 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { DollarSign, TrendingUp, CreditCard, Calendar } from "lucide-react";
+import { DollarSign, TrendingUp, CreditCard, Calendar, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Payment {
   id: string;
   code: string;
   story_id: string;
-  purchaser_phone: string;
+  purchaser_name: string; // Changed from purchaser_phone
   devices_used: number;
   created_at: string;
   stories?: { title: string; price_mwk: number };
@@ -128,12 +128,16 @@ export default function AdminPaymentsPage() {
               >
                 <div className="flex-1">
                   <p className="font-bold text-white">{payment.stories?.title || "Unknown Story"}</p>
-                  <div className="flex gap-3 text-sm text-gray-light/60 mt-1">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-light/60 mt-1">
                     <span className="flex items-center gap-1">
                       <Calendar size={12} />
                       {new Date(payment.created_at).toLocaleDateString()}
                     </span>
-                    <span>Phone: {payment.purchaser_phone}</span>
+                    {/* Updated to show the purchaser's name with a User icon */}
+                    <span className="flex items-center gap-1">
+                      <User size={12} />
+                      {payment.purchaser_name || "Unknown"}
+                    </span>
                   </div>
                 </div>
                 <div className="text-right">
