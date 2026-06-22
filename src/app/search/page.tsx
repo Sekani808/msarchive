@@ -42,7 +42,7 @@ export default function HelpPage() {
     {
       icon: BookOpen,
       title: "Browse the Library",
-      description: "Explore our collection of free and premium stories. Filter by category or search for specific titles."
+      description: "Explore my collection of free and premium stories. Filter by category or search for specific titles."
     },
     {
       icon: Lock,
@@ -57,12 +57,12 @@ export default function HelpPage() {
     {
       icon: CheckCircle,
       title: "Send Payment & Screenshot",
-      description: "Complete your payment using the provided account details and send a screenshot to our WhatsApp for verification."
+      description: "Complete your payment using the provided account details and send a screenshot to my WhatsApp for verification."
     },
     {
       icon: Download,
       title: "Receive & Enter Code",
-      description: "Our admin will verify your payment and send you a unique unlock code via WhatsApp. Enter it in the app to unlock the story instantly!"
+      description: "As the admin, I will verify your payment and send you a unique unlock code via WhatsApp. Enter it in the app to unlock the story instantly!"
     }
   ];
 
@@ -235,7 +235,7 @@ export default function HelpPage() {
           </h2>
           <div className="space-y-4 text-gray-light/80">
             <p>
-              Once our admin verifies your payment (usually within <strong className="text-white">24 hours</strong>), you will receive a unique unlock code via WhatsApp.
+              Once I verify your payment (usually within <strong className="text-white">24 hours</strong>), you will receive a unique unlock code via WhatsApp.
             </p>
             <div className="bg-navy-dark/50 rounded-xl p-4 border-l-4 border-brand">
               <p className="text-sm mb-2"><strong className="text-brand">How to use your code:</strong></p>
@@ -248,7 +248,7 @@ export default function HelpPage() {
               </ol>
             </div>
             <p className="text-sm text-gray-light/60">
-              <strong className="text-white">Note:</strong> Each code is unique and tied to your name. If you lose your browser data, contact us to have your code reset so you can read your story again without paying twice!
+              <strong className="text-white">Note:</strong> Each code is unique and tied to your name. If you lose your browser data, contact me to have your code reset so you can read your story again without paying twice!
             </p>
           </div>
         </div>

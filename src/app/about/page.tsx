@@ -75,7 +75,7 @@ export default function AboutPage() {
             I am a 19-year-old Malawian student at the <strong className="text-white">Malawi University of Science and Technology (MUST)</strong>, pursuing a Bachelor's degree in Chemical Engineering. While my days are filled with equations, my soul belongs to words.
           </p>
           <p className="text-gray-light/80 leading-relaxed">
-            I have a deep passion for poetry and African literature. I believe that the most profound lessons are learned through stories, and that is the heartbeat of everything written on this platform. But my curiosity doesn't stop at literature—I am equally passionate about data science and programming. Msarchive was born from the intersection of these two worlds.
+            I have a deep passion for poetry and African literature. I believe that the most profound lessons are learned through stories, and that is the heartbeat of everything written on this platform. But my curiosity doesn't stop at literature, I am equally passionate about data science and programming. Msarchive was born from the intersection of these two worlds.
           </p>
 
           {/* Badges */}
@@ -122,10 +122,10 @@ export default function AboutPage() {
         {/* Mission */}
         <div className="glass rounded-3xl p-6 md:p-8">
           <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-            <Sparkles className="text-brand" size={20} /> Our Mission
+            <Sparkles className="text-brand" size={20} /> My Mission
           </h3>
           <p className="text-gray-light/80 leading-relaxed">
-            Msarchive was created to be a distraction-free sanctuary. In a world of fleeting content, we believe in the power of a good story. Every piece of content here is carefully crafted to provide a premium, immersive reading experience that stays with you long after the last page.
+            Msarchive was created to be a distraction-free sanctuary. In a world of fleeting content, I believe in the power of a good story. Every piece of content here is carefully crafted to provide a memorable, immersive reading experience that stays with you long after the last page.
           </p>
         </div>
       </motion.section>
