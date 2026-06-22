@@ -86,7 +86,7 @@ export default function AdminCodesPage() {
     setIsGenerating(true);
 
     try {
-      const newCodes = [];
+      const newCodes: string[] = []; // Added `: string[]`
       for (let i = 0; i < batchSize; i++) {
         let code = generateUniqueCode();
         while (newCodes.includes(code) || codes.some(c => c.code === code)) {
