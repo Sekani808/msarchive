@@ -12,5 +12,11 @@ export default function BottomNavWrapper() {
     return null;
   }
 
-  return <BottomNav />;
+  return (
+    <>
+      {/* Spacer to prevent fixed BottomNav from overlapping content globally */}
+      <div className="h-24 md:h-20 pb-[env(safe-area-inset-bottom)]" aria-hidden="true" />
+      <BottomNav />
+    </>
+  );
 }

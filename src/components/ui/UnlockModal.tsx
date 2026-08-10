@@ -1,7 +1,6 @@
-// src/components/ui/UnlockModal.tsx
 "use client";
 
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock, Unlock, CheckCircle, Loader2, ArrowLeft, ArrowRight, Copy } from "lucide-react";
 import { Button } from "./Button";
@@ -74,7 +73,6 @@ export default function UnlockModal({ story, onClose }: UnlockModalProps) {
   const [selectedMethod, setSelectedMethod] = useState<typeof paymentMethods[0] | null>(null);
   const unlockStory = useUnlockStore((state) => state.unlockStory);
   
-  // 1. Initialize the Settings Store
   const { settings, fetchSettings } = useSettingsStore();
 
   useEffect(() => {
@@ -83,16 +81,14 @@ export default function UnlockModal({ story, onClose }: UnlockModalProps) {
 
   if (!story) return null;
 
-  // 2. Dynamic WhatsApp Link using the database settings
   const getWhatsappLink = () => {
     const methodName = selectedMethod?.name || 'Mobile Money';
-    // Clean the phone number for the wa.me link (removes +, spaces, etc.)
     const cleanNumber = settings?.whatsapp_number?.replace(/[^0-9]/g, '') || '265980720991';
     const msg = `Hi! I want to unlock the story "${story.title}" (ID: ${story.id}). I have made the payment of ${story.price_mwk} MWK via ${methodName}. Here is my screenshot.`;
     return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`;
   };
 
-  // The database verification logic (unchanged)
+  // SECURE DATABASE VERIFICATION LOGIC
   const handleVerifyCode = async () => {
     if (!code.trim()) {
       toast.error("Please enter a code.");
@@ -108,46 +104,37 @@ export default function UnlockModal({ story, onClose }: UnlockModalProps) {
     }
 
     try {
-      const { data, error } = await supabase
-        .from("unlock_codes")
-        .select("*")
-        .eq("code", code.trim().toUpperCase())
-        .eq("story_id", story.id)
-        .single();
+      // Call the secure atomic RPC
+      const { data, error } = await supabase.rpc('redeem_unlock_code', {
+        p_code: code.trim().toUpperCase(),
+        p_story_id: story.id,
+        p_device_id: deviceId
+      });
 
-      if (error || !data) {
-        toast.error("Invalid code. Please check and try again.");
+      if (error) {
+        console.error(error);
+        toast.error(error.message || "Failed to verify code.");
         setIsVerifying(false);
         return;
       }
 
-      const usedCodes = JSON.parse(localStorage.getItem('msarchive_used_codes') || '[]');
-      if (usedCodes.includes(data.id)) {
-        toast.error("You have already unlocked this story on this device.");
+      // The RPC returns a JSON object
+      const result = data as { success: boolean; error?: string; code_id?: string };
+
+      if (!result.success) {
+        toast.error(result.error || "Invalid code.");
         setIsVerifying(false);
         return;
       }
 
-      if (data.devices_used >= data.max_devices) {
-        toast.error("This code has reached its maximum usage limit.");
-        setIsVerifying(false);
-        return;
-      }
-
-      // 4. Increment the global counter and reactivate if it was revoked
-      const { error: updateError } = await supabase
-        .from("unlock_codes")
-        .update({ 
-          devices_used: data.devices_used + 1,
-          is_revoked: false // Reactivate the code for revenue tracking!
-        })
-        .eq("id", data.id);
-
-      if (updateError) throw updateError;
-
+      // Success! Update local state
       unlockStory(story.id);
-      usedCodes.push(data.id);
-      localStorage.setItem('msarchive_used_codes', JSON.stringify(usedCodes));
+      
+      const usedCodes = JSON.parse(localStorage.getItem('msarchive_used_codes') || '[]');
+      if (result.code_id && !usedCodes.includes(result.code_id)) {
+        usedCodes.push(result.code_id);
+        localStorage.setItem('msarchive_used_codes', JSON.stringify(usedCodes));
+      }
 
       setStep('success');
       
@@ -159,7 +146,7 @@ export default function UnlockModal({ story, onClose }: UnlockModalProps) {
 
     } catch (error) {
       console.error(error);
-      toast.error("An error occurred. Please try again.");
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsVerifying(false);
     }
@@ -182,7 +169,6 @@ export default function UnlockModal({ story, onClose }: UnlockModalProps) {
           className="w-full max-w-md glass rounded-3xl p-6 relative overflow-hidden max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close Button */}
           <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-gray-light/70 z-10">
             <X size={20} />
           </button>

@@ -29,4 +29,11 @@
   .gradient-brand {
     background: linear-gradient(135deg, #7BC943, #0F172A);
   }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

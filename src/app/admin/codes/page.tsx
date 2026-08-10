@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Key, Plus, Trash2, Copy, Filter, RefreshCw } from "lucide-react";
+import { Key, Plus, Trash2, Copy, Filter, RefreshCw, User, Smartphone, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { motion } from "framer-motion";
 import { toast, Toaster } from "sonner";
@@ -12,10 +12,10 @@ interface UnlockCode {
   id: string;
   code: string;
   story_id: string;
-  purchaser_name: string; // Changed from purchaser_phone
+  purchaser_name: string; 
   max_devices: number;
   devices_used: number;
-  is_revoked: boolean; // New field
+  is_revoked: boolean; 
   expires_at: string | null;
   created_at: string;
   stories?: { title: string };
@@ -34,7 +34,7 @@ export default function AdminCodesPage() {
   
   // Generate form state
   const [selectedStoryId, setSelectedStoryId] = useState("");
-  const [purchaserName, setPurchaserName] = useState(""); // Changed from purchaserPhone
+  const [purchaserName, setPurchaserName] = useState(""); 
   const [batchSize, setBatchSize] = useState(1);
   const [maxDevices, setMaxDevices] = useState(2);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -86,7 +86,7 @@ export default function AdminCodesPage() {
     setIsGenerating(true);
 
     try {
-      const newCodes: string[] = []; // Added `: string[]`
+      const newCodes: string[] = []; 
       for (let i = 0; i < batchSize; i++) {
         let code = generateUniqueCode();
         while (newCodes.includes(code) || codes.some(c => c.code === code)) {
@@ -98,7 +98,7 @@ export default function AdminCodesPage() {
       const codesToInsert = newCodes.map(code => ({
         code,
         story_id: selectedStoryId,
-        purchaser_name: purchaserName, // Save the name
+        purchaser_name: purchaserName, 
         max_devices: maxDevices,
         devices_used: 0,
         is_revoked: false,
@@ -122,7 +122,6 @@ export default function AdminCodesPage() {
     }
   };
 
-  // NEW: Revoke Code Function
   const handleRevokeCode = async (id: string) => {
     if (!confirm("Revoke this code? This will reset its usage count and deduct the revenue until the user re-enters it.")) return;
     
@@ -147,7 +146,6 @@ export default function AdminCodesPage() {
     toast.success("Code copied to clipboard!");
   };
 
-  // Filter logic
   const filteredCodes = codes.filter(code => {
     const matchesStory = filterStory === "all" || code.story_id === filterStory;
     const isUsed = code.devices_used >= code.max_devices;
@@ -161,21 +159,29 @@ export default function AdminCodesPage() {
   });
 
   if (isLoading) {
-    return <div className="p-8 text-gray-light/50">Loading codes...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[50vh] px-4">
+        <p className="text-gray-light/50 animate-pulse">Loading codes...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-20">
       <Toaster theme="dark" position="top-center" />
       
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-2">
         <div>
-          <h1 className="text-3xl font-bold text-white">Unlock Codes</h1>
-          <p className="text-gray-light/60 mt-1">Generate and manage story unlock codes.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Unlock Codes</h1>
+          <p className="text-gray-light/60 mt-1 text-sm sm:text-base">Generate and manage story unlock codes.</p>
         </div>
-        <Button variant="primary" onClick={() => setShowGenerateForm(!showGenerateForm)}>
+        <Button 
+          variant="primary" 
+          onClick={() => setShowGenerateForm(!showGenerateForm)}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 active:scale-[0.98] transition-transform py-2.5 px-4"
+        >
           <Plus size={18} />
-          Generate Codes
+          <span>{showGenerateForm ? "Close Form" : "Generate Codes"}</span>
         </Button>
       </div>
 
@@ -184,65 +190,65 @@ export default function AdminCodesPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-2xl p-6 space-y-4"
+          className="glass rounded-2xl p-4 sm:p-6 space-y-5 border border-white/10 shadow-xl"
         >
-          <h2 className="text-xl font-bold text-white">Generate New Codes</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white">Generate New Codes</h2>
           
-          <div>
-            <label className="text-sm font-medium text-gray-light/80 mb-2 block">Select Story</label>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-light/80 block">Select Story</label>
             <select
               value={selectedStoryId}
               onChange={(e) => setSelectedStoryId(e.target.value)}
-              className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50"
+              className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all bg-navy-dark"
             >
               <option value="">Choose a story...</option>
               {stories.map(story => (
-                <option key={story.id} value={story.id}>{story.title}</option>
+                <option key={story.id} value={story.id} className="bg-navy-dark">{story.title}</option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-gray-light/80 mb-2 block">Purchaser Full Name</label>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-light/80 block">Purchaser Full Name</label>
             <input
               type="text"
               value={purchaserName}
               onChange={(e) => setPurchaserName(e.target.value)}
               placeholder="e.g. John Banda"
-              className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50"
+              className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-light/80 mb-2 block">Batch Size (1-10)</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-light/80 block">Batch Size <span className="text-gray-light/40 font-normal">(1-10)</span></label>
               <input
                 type="number"
                 min="1"
                 max="10"
                 value={batchSize}
                 onChange={(e) => setBatchSize(parseInt(e.target.value) || 1)}
-                className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50"
+                className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all"
               />
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-light/80 mb-2 block">Max Devices</label>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-light/80 block">Max Devices</label>
               <input
                 type="number"
                 min="1"
                 max="10"
                 value={maxDevices}
                 onChange={(e) => setMaxDevices(parseInt(e.target.value) || 1)}
-                className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50"
+                className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all"
               />
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="primary" onClick={handleGenerateCodes} disabled={isGenerating}>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Button variant="primary" onClick={handleGenerateCodes} disabled={isGenerating} className="w-full sm:w-auto flex-1 sm:flex-none py-3 text-base font-semibold shadow-lg shadow-emerald-500/10 active:scale-[0.98] transition-transform">
               {isGenerating ? "Generating..." : "Generate Codes"}
             </Button>
-            <Button variant="secondary" onClick={() => setShowGenerateForm(false)}>
+            <Button variant="secondary" onClick={() => setShowGenerateForm(false)} className="w-full sm:w-auto py-3 text-base font-semibold active:scale-[0.98] transition-transform">
               Cancel
             </Button>
           </div>
@@ -250,30 +256,31 @@ export default function AdminCodesPage() {
       )}
 
       {/* Filters */}
-      <div className="glass rounded-2xl p-4 flex flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <Filter size={18} className="text-gray-light/50" />
+      <div className="glass rounded-2xl p-3 sm:p-4 border border-white/10 shadow-lg">
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <Filter size={16} className="text-gray-light/50" />
+          <span className="text-sm font-medium text-gray-light/70">Filter Codes</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <select
             value={filterStory}
             onChange={(e) => setFilterStory(e.target.value)}
-            className="glass rounded-lg py-2 px-3 text-sm text-white focus:outline-none"
+            className="w-full glass border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 bg-navy-dark/50"
           >
             <option value="all">All Stories</option>
             {stories.map(story => (
-              <option key={story.id} value={story.id}>{story.title}</option>
+              <option key={story.id} value={story.id} className="bg-navy-dark">{story.title}</option>
             ))}
           </select>
-        </div>
 
-        <div className="flex items-center gap-2">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="glass rounded-lg py-2 px-3 text-sm text-white focus:outline-none"
+            className="w-full glass border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 bg-navy-dark/50"
           >
             <option value="all">All Status</option>
             <option value="unused">Available</option>
-            <option value="used">Used</option>
+            <option value="used">Maxed Out</option>
             <option value="revoked">Revoked</option>
           </select>
         </div>
@@ -281,9 +288,12 @@ export default function AdminCodesPage() {
 
       {/* Codes List */}
       {filteredCodes.length === 0 ? (
-        <div className="glass rounded-2xl p-12 text-center">
-          <Key className="mx-auto text-gray-light/30 mb-4" size={48} />
-          <p className="text-gray-light/50">No codes found.</p>
+        <div className="glass rounded-2xl p-12 text-center border border-white/5">
+          <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center mb-4">
+            <Key className="text-gray-light/40" size={32} />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-1">No codes found</h3>
+          <p className="text-gray-light/50 text-sm">Try adjusting your filters or generate new codes.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -296,66 +306,81 @@ export default function AdminCodesPage() {
                 key={code.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`glass rounded-2xl p-5 ${isRevoked ? "opacity-60 border-l-4 border-yellow-500" : ""}`}
+                transition={{ delay: index * 0.03 }}
+                className={`glass rounded-2xl p-4 sm:p-5 border transition-all shadow-lg ${
+                  isRevoked 
+                    ? "opacity-80 border-yellow-500/30 bg-yellow-500/5" 
+                    : isUsed 
+                      ? "border-white/5 bg-white/5" 
+                      : "border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40"
+                }`}
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <code className="text-lg font-mono font-bold text-brand">{code.code}</code>
+                <div className="flex flex-col gap-4">
+                  {/* Top Row: Code & Actions */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <code className="text-lg sm:text-xl font-mono font-bold text-emerald-400 tracking-wider truncate">{code.code}</code>
                       <button
                         onClick={() => copyCodeToClipboard(code.code)}
-                        className="p-1.5 rounded-lg hover:bg-white/10 text-gray-light/50 hover:text-white transition-colors"
+                        className="p-2 rounded-lg hover:bg-white/10 text-gray-light/50 hover:text-white transition-colors active:scale-90 flex-shrink-0"
+                        aria-label="Copy code"
                       >
-                        <Copy size={14} />
+                        <Copy size={16} />
                       </button>
-                      {isRevoked && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400">
-                          REVOKED
-                        </span>
-                      )}
                     </div>
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      <span className="text-gray-light/70">
-                        <strong className="text-white">Story:</strong> {code.stories?.title || "Unknown"}
-                      </span>
-                      <span className="text-gray-light/70">
-                        <strong className="text-white">Name:</strong> {code.purchaser_name || "Unknown"}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                        isRevoked ? "bg-yellow-500/20 text-yellow-400" :
-                        isUsed ? "bg-red-500/20 text-red-400" : "bg-brand/20 text-brand"
-                      }`}>
-                        {isRevoked ? "REVOKED" : isUsed ? "MAXED OUT" : "AVAILABLE"}
-                      </span>
+                    
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => handleRevokeCode(code.id)}
+                        disabled={isRevoked}
+                        className={`p-2.5 rounded-full transition-all active:scale-90 ${
+                          isRevoked 
+                            ? "text-gray-light/30 cursor-not-allowed" 
+                            : "text-accent-blue hover:bg-accent-blue/10"
+                        }`}
+                        title="Revoke Code (Reset usage & deduct revenue)"
+                        aria-label="Revoke code"
+                      >
+                        <RefreshCw size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCode(code.id)}
+                        className="p-2.5 text-red-400 hover:bg-red-500/10 rounded-full transition-all active:scale-90"
+                        aria-label="Delete code"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
-                    <p className="text-xs text-gray-light/40 mt-2">
-                      Created: {new Date(code.created_at).toLocaleDateString()}
-                    </p>
                   </div>
 
-                  <div className="flex gap-2 self-start">
-                    {/* Revoke Button */}
-                    <button
-                      onClick={() => handleRevokeCode(code.id)}
-                      disabled={isRevoked}
-                      className={`p-2 rounded-full transition-colors ${
-                        isRevoked 
-                          ? "text-gray-light/30 cursor-not-allowed" 
-                          : "text-accent-blue hover:bg-accent-blue/10"
-                      }`}
-                      title="Revoke Code (Reset usage & deduct revenue)"
-                    >
-                      <RefreshCw size={18} />
-                    </button>
-                    
-                    {/* Delete Button */}
-                    <button
-                      onClick={() => handleDeleteCode(code.id)}
-                      className="p-2 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                  {/* Middle Row: Story & Status */}
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-base font-semibold text-white truncate flex-1">
+                      {code.stories?.title || "Unknown Story"}
+                    </p>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold flex-shrink-0 ${
+                      isRevoked ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" :
+                      isUsed ? "bg-red-500/20 text-red-400 border border-red-500/30" : 
+                      "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    }`}>
+                      {isRevoked ? "REVOKED" : isUsed ? "MAXED OUT" : "AVAILABLE"}
+                    </span>
+                  </div>
+
+                  {/* Bottom Row: Metadata */}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-light/60 pt-3 border-t border-white/5">
+                    <span className="flex items-center gap-1.5">
+                      <User size={12} className="text-gray-light/40" />
+                      <span className="truncate max-w-[120px]">{code.purchaser_name || "Unknown"}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Smartphone size={12} className="text-gray-light/40" />
+                      {code.devices_used}/{code.max_devices} Devices
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Calendar size={12} className="text-gray-light/40" />
+                      {new Date(code.created_at).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </motion.div>

@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Upload, Loader2, Check, X } from "lucide-react";
+import { Upload, Loader2, Check, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { toast, Toaster } from "sonner";
 import mammoth from "mammoth";
@@ -46,10 +46,6 @@ export default function NewStoryPage() {
     },
   });
 
-  // Function to extract chapters from DOCX
-    // Function to extract chapters from DOCX
-    // Function to extract chapters from DOCX
-  // 2. Parse new DOCX if uploaded
   // 2. Parse new DOCX if uploaded
   const handleDocxChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,6 +102,7 @@ export default function NewStoryPage() {
       setIsParsing(false);
     }
   };
+
   const toggleChapter = (id: string) => {
     setSelectedChapterIds(prev => 
       prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id]
@@ -165,80 +162,92 @@ export default function NewStoryPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-20">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-6 pb-20">
       <Toaster theme="dark" position="top-center" />
       
-      <div>
-        <h1 className="text-3xl font-bold text-white">Upload New Story</h1>
-        <p className="text-gray-light/60 mt-1">Fill in the details and upload your files.</p>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-2">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Upload New Story</h1>
+          <p className="text-gray-light/60 mt-1 text-sm sm:text-base">Fill in the details and upload your files.</p>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="glass rounded-2xl p-6 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="glass border border-white/10 rounded-2xl p-4 sm:p-6 space-y-6 shadow-xl">
         
         {/* Basic Info Fields */}
-        <div>
-          <label className="text-sm font-medium text-gray-light/80 mb-2 block">Story Title</label>
-          <input {...register("title")} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" placeholder="e.g. Echoes of the Night" />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-light/80 block">Story Title</label>
+          <input {...register("title")} className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all" placeholder="e.g. Echoes of the Night" />
           {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message}</p>}
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-gray-light/80 mb-2 block">Description</label>
-          <textarea {...register("description")} rows={3} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none" placeholder="A short summary..." />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-light/80 block">Description</label>
+          <textarea {...register("description")} rows={3} className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all resize-none" placeholder="A short summary..." />
           {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description.message}</p>}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-light/80 mb-2 block">Category</label>
-            <input {...register("category")} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" placeholder="e.g. Thriller" />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-light/80 block">Category</label>
+            <input {...register("category")} className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all" placeholder="e.g. Thriller" />
           </div>
-          <div>
-            <label className="text-sm font-medium text-gray-light/80 mb-2 block">Price (MWK) - 0 for Free</label>
-            <input type="number" {...register("price_mwk", { valueAsNumber: true })} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" placeholder="0" />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-light/80 block">Price (MWK) <span className="text-gray-light/40 font-normal">- 0 for Free</span></label>
+            <input type="number" {...register("price_mwk", { valueAsNumber: true })} className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all" placeholder="0" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-navy-dark/50 rounded-xl border border-white/5">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 shadow-sm">
           <div>
-            <p className="text-sm font-bold text-white">Premium Story?</p>
-            <p className="text-xs text-gray-light/50">If yes, users must pay to unlock it.</p>
+            <p className="text-base font-semibold text-white">Premium Story?</p>
+            <p className="text-xs text-gray-light/50 mt-0.5">If yes, users must pay to unlock it.</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer active:scale-95 transition-transform">
             <input type="checkbox" {...register("is_locked")} className="sr-only peer" />
-            <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+            <div className="w-12 h-7 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
           </label>
         </div>
 
         {/* DOCX Upload */}
-        <div>
-          <label className="text-sm font-medium text-gray-light/80 mb-2 block">Story Content (.docx)</label>
-          <input 
-            type="file" 
-            accept=".docx"
-            onChange={handleDocxChange}
-            className="block w-full text-sm text-gray-light/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand/20 file:text-brand hover:file:bg-brand/30 cursor-pointer"
-          />
-          {isParsing && <p className="text-xs text-brand mt-2 animate-pulse">Parsing document for chapters...</p>}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-light/80 block">Story Content (.docx)</label>
+          <label className="flex items-center justify-center gap-2 w-full py-4 border-2 border-dashed border-emerald-500/30 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors cursor-pointer active:scale-[0.98]">
+            {isParsing ? (
+              <><Loader2 size={18} className="animate-spin text-emerald-400" /> <span className="text-sm text-emerald-400 font-medium">Parsing Document...</span></>
+            ) : (
+              <>
+                <FileText size={18} className="text-emerald-400" />
+                <span className="text-sm text-emerald-400 font-medium truncate max-w-[200px]">
+                  {docxFile ? docxFile.name : "Upload .docx File"}
+                </span>
+              </>
+            )}
+            <input type="file" accept=".docx" onChange={handleDocxChange} className="hidden" disabled={isParsing} />
+          </label>
         </div>
 
         {/* Chapter Selection UI */}
         {extractedChapters.length > 0 && (
           <div className="space-y-3">
             <label className="text-sm font-medium text-gray-light/80 block">Select Chapters to Publish ({selectedChapterIds.length}/{extractedChapters.length})</label>
-            <div className="max-h-60 overflow-y-auto space-y-2 p-2 bg-navy-dark/30 rounded-xl border border-white/5">
+            <div className="max-h-72 overflow-y-auto space-y-2 p-2 bg-navy-dark/40 rounded-xl border border-white/5 shadow-inner">
               {extractedChapters.map((chapter, index) => {
                 const isSelected = selectedChapterIds.includes(chapter.id);
                 return (
                   <div 
-                    key={`${chapter.id}-${index}`}
-                    onClick={() => toggleChapter(chapter.id)}
-                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                      isSelected ? "bg-brand/10 border border-brand/30" : "bg-white/5 border border-transparent hover:bg-white/10"
+                    key={`${chapter.id}-${index}`} 
+                    onClick={() => toggleChapter(chapter.id)} 
+                    className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all active:scale-[0.98] ${
+                      isSelected 
+                        ? "bg-emerald-500/10 border border-emerald-500/30 shadow-sm" 
+                        : "bg-white/5 border border-transparent hover:bg-white/10"
                     }`}
                   >
-                    <span className="text-sm text-white font-medium">{chapter.title}</span>
-                    {isSelected ? <Check size={16} className="text-brand" /> : <X size={16} className="text-gray-light/30" />}
+                    <span className="text-sm sm:text-base text-white font-medium flex-1 truncate pr-2">{chapter.title}</span>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${isSelected ? 'bg-emerald-500' : 'bg-white/10'}`}>
+                      {isSelected ? <Check size={14} className="text-white" /> : <X size={14} className="text-gray-400" />}
+                    </div>
                   </div>
                 );
               })}
@@ -247,21 +256,32 @@ export default function NewStoryPage() {
         )}
 
         {/* Image Upload */}
-        <div>
-          <label className="text-sm font-medium text-gray-light/80 mb-2 block">Cover Image</label>
-          <input 
-            type="file" 
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-            className="block w-full text-sm text-gray-light/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent-blue/20 file:text-accent-blue hover:file:bg-accent-blue/30 cursor-pointer"
-          />
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-light/80 block">Cover Image</label>
+          <label className="flex items-center justify-center gap-2 w-full py-4 border-2 border-dashed border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer active:scale-[0.98]">
+            <Upload size={18} className="text-gray-light/60" />
+            <span className="text-sm text-gray-light/80 font-medium truncate max-w-[200px]">
+              {imageFile ? imageFile.name : "Choose Cover Image"}
+            </span>
+            <input 
+              type="file" 
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              className="hidden" 
+            />
+          </label>
         </div>
 
-        <Button type="submit" variant="primary" className="w-full" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          variant="primary" 
+          className="w-full py-4 text-base font-semibold shadow-lg shadow-emerald-500/10 active:scale-[0.98] transition-transform" 
+          disabled={isSubmitting}
+        >
           {isSubmitting ? (
-            <><Loader2 className="animate-spin" size={18} /> Publishing...</>
+            <><Loader2 className="animate-spin" size={20} /> Publishing...</>
           ) : (
-            <><Upload size={18} /> Publish Story</>
+            <><Upload size={20} /> Publish Story</>
           )}
         </Button>
       </form>

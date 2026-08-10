@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
-import { Save, Loader2, Check, X, Upload, Image as ImageIcon } from "lucide-react";
+import { Save, Loader2, Check, X, Upload, Image as ImageIcon, FileText } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { toast, Toaster } from "sonner";
 import mammoth from "mammoth";
@@ -183,89 +183,127 @@ export default function EditStoryPage() {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-gray-light/50">Loading story data...</div>;
+  if (isLoading) return <div className="p-8 text-gray-light/50 text-center">Loading story data...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-20">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-6 pb-20">
       <Toaster theme="dark" position="top-center" />
       
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-2">
         <div>
-          <h1 className="text-3xl font-bold text-white">Edit Story</h1>
-          <p className="text-gray-light/60 mt-1">Update details or replace content.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Edit Story</h1>
+          <p className="text-gray-light/60 mt-1 text-sm sm:text-base">Update details or replace content.</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="glass rounded-2xl p-6 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="glass border border-white/10 rounded-2xl p-4 sm:p-6 space-y-6 shadow-xl">
         
         {/* Current Cover Preview */}
         <div>
           <label className="text-sm font-medium text-gray-light/80 mb-2 block">Current Cover</label>
-          <div className="w-32 h-48 rounded-xl overflow-hidden bg-navy-dark border border-white/10">
-            {currentCover ? <img src={currentCover} alt="Cover" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-light/30"><ImageIcon /></div>}
+          <div className="relative w-32 h-48 sm:w-40 sm:h-56 rounded-xl overflow-hidden bg-navy-dark border border-white/10 shadow-lg ring-1 ring-white/5">
+            {currentCover ? (
+              <img src={currentCover} alt="Cover" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-light/40 gap-2">
+                <ImageIcon size={24} />
+                <span className="text-xs">No Cover</span>
+              </div>
+            )}
           </div>
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-gray-light/80 mb-2 block">Story Title</label>
-          <input {...register("title")} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-light/80 block">Story Title</label>
+          <input {...register("title")} className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all" />
           {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message}</p>}
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-gray-light/80 mb-2 block">Description</label>
-          <textarea {...register("description")} rows={3} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none" />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-light/80 block">Description</label>
+          <textarea {...register("description")} rows={3} className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all resize-none" />
           {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description.message}</p>}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-light/80 mb-2 block">Category</label>
-            <input {...register("category")} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-light/80 block">Category</label>
+            <input {...register("category")} className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all" />
           </div>
-          <div>
-            <label className="text-sm font-medium text-gray-light/80 mb-2 block">Price (MWK)</label>
-            {/* Added { valueAsNumber: true } to fix the TypeScript error */}
-            <input type="number" {...register("price_mwk", { valueAsNumber: true })} className="w-full glass rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-brand/50" />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-light/80 block">Price (MWK)</label>
+            <input type="number" {...register("price_mwk", { valueAsNumber: true })} className="w-full glass border border-white/10 rounded-xl py-3.5 px-4 text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-navy-dark/50 rounded-xl border border-white/5">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 shadow-sm">
           <div>
-            <p className="text-sm font-bold text-white">Premium Story?</p>
-            <p className="text-xs text-gray-light/50">Toggle to lock/unlock.</p>
+            <p className="text-base font-semibold text-white">Premium Story?</p>
+            <p className="text-xs text-gray-light/50 mt-0.5">Toggle to lock/unlock.</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer active:scale-95 transition-transform">
             <input type="checkbox" {...register("is_locked")} className="sr-only peer" />
-            <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+            <div className="w-12 h-7 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
           </label>
         </div>
 
         {/* Replace Cover Image */}
-        <div>
-          <label className="text-sm font-medium text-gray-light/80 mb-2 block">Replace Cover Image (Optional)</label>
-          <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} className="block w-full text-sm text-gray-light/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent-blue/20 file:text-accent-blue cursor-pointer" />
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-light/80 block">Replace Cover Image <span className="text-gray-light/40 font-normal">(Optional)</span></label>
+          <label className="flex items-center justify-center gap-2 w-full py-4 border-2 border-dashed border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer active:scale-[0.98]">
+            <Upload size={18} className="text-gray-light/60" />
+            <span className="text-sm text-gray-light/80 font-medium truncate max-w-[200px]">
+              {imageFile ? imageFile.name : "Choose Image"}
+            </span>
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)} 
+              className="hidden" 
+            />
+          </label>
         </div>
 
         {/* Replace DOCX Content */}
-        <div className="pt-4 border-t border-white/5">
-          <label className="text-sm font-medium text-gray-light/80 mb-2 block">Replace Story Content (.docx) (Optional)</label>
-          <p className="text-xs text-gray-light/40 mb-3">Only upload a new file if you want to change the chapters. Otherwise, leave this blank.</p>
-          <input type="file" accept=".docx" onChange={handleDocxChange} className="block w-full text-sm text-gray-light/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand/20 file:text-brand cursor-pointer" />
-          {isParsing && <p className="text-xs text-brand mt-2 animate-pulse">Parsing...</p>}
+        <div className="pt-4 border-t border-white/5 space-y-2">
+          <label className="text-sm font-medium text-gray-light/80 block">Replace Story Content (.docx) <span className="text-gray-light/40 font-normal">(Optional)</span></label>
+          <p className="text-xs text-gray-light/50 mb-3">Only upload a new file if you want to change the chapters.</p>
+          <label className="flex items-center justify-center gap-2 w-full py-4 border-2 border-dashed border-emerald-500/30 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors cursor-pointer active:scale-[0.98]">
+            {isParsing ? (
+              <><Loader2 size={18} className="animate-spin text-emerald-400" /> <span className="text-sm text-emerald-400 font-medium">Parsing Document...</span></>
+            ) : (
+              <>
+                <FileText size={18} className="text-emerald-400" />
+                <span className="text-sm text-emerald-400 font-medium truncate max-w-[200px]">
+                  {docxFile ? docxFile.name : "Upload .docx File"}
+                </span>
+              </>
+            )}
+            <input type="file" accept=".docx" onChange={handleDocxChange} className="hidden" disabled={isParsing} />
+          </label>
         </div>
 
         {/* New Chapter Selection */}
         {hasNewDocx && extractedChapters.length > 0 && (
           <div className="space-y-3">
             <label className="text-sm font-medium text-gray-light/80 block">Select Chapters to Publish ({selectedChapterIds.length}/{extractedChapters.length})</label>
-            <div className="max-h-60 overflow-y-auto space-y-2 p-2 bg-navy-dark/30 rounded-xl border border-white/5">
+            <div className="max-h-72 overflow-y-auto space-y-2 p-2 bg-navy-dark/40 rounded-xl border border-white/5 shadow-inner">
               {extractedChapters.map((chapter, index) => {
                 const isSelected = selectedChapterIds.includes(chapter.id);
                 return (
-                  <div key={`${chapter.id}-${index}`} onClick={() => toggleChapter(chapter.id)} className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${isSelected ? "bg-brand/10 border border-brand/30" : "bg-white/5 border border-transparent hover:bg-white/10"}`}>
-                    <span className="text-sm text-white font-medium">{chapter.title}</span>
-                    {isSelected ? <Check size={16} className="text-brand" /> : <X size={16} className="text-gray-light/30" />}
+                  <div 
+                    key={`${chapter.id}-${index}`} 
+                    onClick={() => toggleChapter(chapter.id)} 
+                    className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all active:scale-[0.98] ${
+                      isSelected 
+                        ? "bg-emerald-500/10 border border-emerald-500/30 shadow-sm" 
+                        : "bg-white/5 border border-transparent hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="text-sm sm:text-base text-white font-medium flex-1 truncate pr-2">{chapter.title}</span>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${isSelected ? 'bg-emerald-500' : 'bg-white/10'}`}>
+                      {isSelected ? <Check size={14} className="text-white" /> : <X size={14} className="text-gray-400" />}
+                    </div>
                   </div>
                 );
               })}
@@ -273,8 +311,13 @@ export default function EditStoryPage() {
           </div>
         )}
 
-        <Button type="submit" variant="primary" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="animate-spin" size={18} /> Saving...</> : <><Save size={18} /> Save Changes</>}
+        <Button 
+          type="submit" 
+          variant="primary" 
+          className="w-full py-4 text-base font-semibold shadow-lg shadow-emerald-500/10 active:scale-[0.98] transition-transform" 
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <><Loader2 className="animate-spin" size={20} /> Saving...</> : <><Save size={20} /> Save Changes</>}
         </Button>
       </form>
     </div>

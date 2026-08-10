@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -20,7 +19,7 @@ export default function Home() {
         .from("stories")
         .select("*")
         .order("published_date", { ascending: false })
-        .limit(3); // Changed from 4 to 3!
+        .limit(3); 
       
       if (data) setTrendingStories(data);
     };
@@ -29,7 +28,8 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-navy-dark">
+    // Added pb-32 to ensure the fixed BottomNav never overlaps the last story card
+    <main className="min-h-screen bg-navy-dark pb-32 md:pb-24">
       <Hero />
       
       {/* Trending / New Stories Section */}
@@ -42,18 +42,17 @@ export default function Home() {
             className="flex items-center gap-3 mb-8"
           >
             <Flame className="text-brand" size={28} />
-            <h2 className="text-2xl md:text-3xl font-bold text-white">Fresh in the Archive</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Fresh in the Archive</h2>
           </motion.div>
 
-          {/* Updated grid to perfectly fit 3 items on desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             {trendingStories.map((story, index) => (
               <motion.div
                 key={story.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
               >
                 <StoryCard story={story} onUnlockClick={setUnlockingStory} />
               </motion.div>
@@ -62,7 +61,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* Unlock Modal */}
       <UnlockModal 
         story={unlockingStory} 
         onClose={() => setUnlockingStory(null)} 

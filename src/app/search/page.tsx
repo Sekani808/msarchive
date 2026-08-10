@@ -1,18 +1,22 @@
 // src/app/search/page.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   BookOpen, 
   Lock, 
   CreditCard, 
   CheckCircle, 
-  ArrowRight,
-  Download,
-  AlertCircle
+  KeyRound,
+  AlertCircle,
+  ChevronDown,
+  MessageCircle,
+  ShoppingBag,
+  Heart,
+  HelpCircle
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useSettingsStore } from "@/store/useSettingsStore"; // Added import
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 // Custom WhatsApp Icon Component (Official Logo)
 const WhatsAppIcon = ({ size = 18 }: { size?: number }) => (
@@ -22,235 +26,355 @@ const WhatsAppIcon = ({ size = 18 }: { size?: number }) => (
 );
 
 export default function HelpPage() {
-  const [showThrob, setShowThrob] = useState(true);
-  
-  // 1. Initialize the Settings Store
   const { settings, fetchSettings } = useSettingsStore();
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // Stop throbbing after 5 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => setShowThrob(false), 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // 2. Fetch settings from the database
   useEffect(() => {
     if (!settings) fetchSettings();
   }, [settings, fetchSettings]);
 
-  const steps = [
-    {
-      icon: BookOpen,
-      title: "Browse the Library",
-      description: "Explore my collection of free and premium stories. Filter by category or search for specific titles."
-    },
-    {
-      icon: Lock,
-      title: "Select a Premium Story",
-      description: "Premium stories are marked with a lock icon and price tag. Tap on any story to begin the unlock process."
-    },
-    {
-      icon: CreditCard,
-      title: "Choose Payment Method",
-      description: "Select your preferred option: Mo626 (National Bank), *247# (Standard Bank), Airtel Money (*211#), or Mpamba (*444#)."
-    },
-    {
-      icon: CheckCircle,
-      title: "Send Payment & Screenshot",
-      description: "Complete your payment using the provided account details and send a screenshot to my WhatsApp for verification."
-    },
-    {
-      icon: Download,
-      title: "Receive & Enter Code",
-      description: "As the admin, I will verify your payment and send you a unique unlock code via WhatsApp. Enter it in the app to unlock the story instantly!"
-    }
+  const formatWhatsAppLink = () => {
+    const number = settings?.whatsapp_number?.replace(/[^0-9]/g, '') || '265980720991';
+    return `https://wa.me/${number}`;
+  };
+
+  const quickActions = [
+    { id: 'buy', label: 'Buy a Story', icon: BookOpen, href: '#purchase-flow' },
+    { id: 'pay', label: 'Payment Methods', icon: CreditCard, href: '#payment-methods' },
+    { id: 'interact', label: 'Like, Rate & Comment', icon: MessageCircle, href: '#interactions' },
+    { id: 'hardcopy', label: 'Order a Hard Copy', icon: ShoppingBag, href: '#hard-copy' },
+    { id: 'unlock', label: 'I Have a Code', icon: KeyRound, href: '#unlock-code' },
+    { id: 'contact', label: 'Contact WhatsApp', icon: HelpCircle, href: '#whatsapp-support' },
+  ];
+
+  const purchaseSteps = [
+    { title: "Browse the Library", desc: "Explore free and premium stories." },
+    { title: "Choose a Premium Story", desc: "Premium stories display a price/lock indicator. Select the story to begin the unlock process." },
+    { title: "Choose a Payment Method", desc: "Choose one of the supported payment methods below." },
+    { title: "Complete Payment", desc: "Use the displayed banking or mobile-money instructions." },
+    { title: "Send Payment Proof", desc: "Take a screenshot of the payment confirmation and send it through WhatsApp." },
+    { title: "Receive Your Unlock Code", desc: "After payment verification, you will receive a unique unlock code." },
+    { title: "Unlock and Read", desc: "Enter the code in the story unlock interface and start reading." },
   ];
 
   const paymentMethods = [
-    {
-      name: "Mo626",
-      subtitle: "National Bank",
-      code: "*626#",
-      image: "/assets/images/payments/mo626.png",
-      color: "bg-blue-600"
-    },
-    {
-      name: "*247#",
-      subtitle: "Standard Bank",
-      code: "*247#",
-      image: "/assets/images/payments/247.png",
-      color: "bg-purple-600"
-    },
-    {
-      name: "Airtel Money",
-      subtitle: "Mobile Money",
-      code: "*211#",
-      image: "/assets/images/payments/airtel-money.png",
-      color: "bg-red-500"
-    },
-    {
-      name: "Mpamba",
-      subtitle: "TNM Mobile Money",
-      code: "*444#",
-      image: "/assets/images/payments/mpamba.jpg",
-      color: "bg-green-500"
-    }
+    { name: "Mo626", subtitle: "National Bank", code: "*626#", image: "/assets/images/payments/mo626.png" },
+    { name: "*247#", subtitle: "Standard Bank", code: "*247#", image: "/assets/images/payments/247.png" },
+    { name: "Airtel Money", subtitle: "Mobile Money", code: "*211#", image: "/assets/images/payments/airtel-money.png" },
+    { name: "Mpamba", subtitle: "TNM Mobile Money", code: "*444#", image: "/assets/images/payments/mpamba.jpg" },
   ];
 
+  const whatsappSteps = [
+    "Take a screenshot of the payment confirmation.",
+    "Send it to the Msarchive WhatsApp number.",
+    "Include the story title.",
+    "Include your full name.",
+    "If ordering a hard copy, include the quantity and delivery details.",
+    "Wait for payment verification.",
+    "Receive your unlock code.",
+  ];
+
+  const unlockSteps = [
+    "Open the premium story.",
+    "Choose the unlock-code option.",
+    "Enter the code exactly as received.",
+    "Tap Unlock Story.",
+    "Start reading.",
+  ];
+
+  const faqs = [
+    { q: "How do I buy a premium story?", a: "Browse the library, select a premium story, choose a payment method, and send your payment screenshot via WhatsApp for verification." },
+    { q: "Which payment methods are supported?", a: "We support Mo626 (National Bank), Standard Bank (*247#), Airtel Money (*211#), and Mpamba TNM (*444#)." },
+    { q: "Where do I send my payment screenshot?", a: "Send your screenshot, along with the story title and your full name, to the official Msarchive WhatsApp number." },
+    { q: "How do I like a story?", a: "Tap the heart icon on any story card or in the story details screen to add your like." },
+    { q: "How do I rate a story?", a: "Open the story details, complete the story, then use the rating option to choose your stars." },
+    { q: "How can I leave a comment?", a: "After completing and rating a story, open the story details and submit your comment with your name." },
+    { q: "How do I order a hard copy?", a: "Open the story details and choose 'Order Hard Copy'. Enter your name, WhatsApp number, quantity, and submit the request." },
+    { q: "What happens after I receive my unlock code?", a: "Enter the code in the story's unlock interface to instantly gain access to the full text." },
+    { q: "What if my story does not unlock?", a: "Ensure you entered the code exactly as received. If it still fails, contact us on WhatsApp for assistance." },
+    { q: "What if I lose my unlock code?", a: "Contact us on WhatsApp with your name and story title, and we will help you regain access without paying twice." },
+    { q: "Are the free stories really free?", a: "Yes, free stories are completely free to read and do not require payment or an unlock code." },
+  ];
+
+  const WhatsAppButton = () => (
+    <a 
+      href={formatWhatsAppLink()} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 px-6 py-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-full font-semibold transition-all active:scale-95 shadow-lg shadow-green-500/20"
+      aria-label="Contact Msarchive on WhatsApp (opens in new tab)"
+    >
+      <WhatsAppIcon size={18} />
+      Contact on WhatsApp
+    </a>
+  );
+
   return (
-    <main className="min-h-screen px-6 pt-12 pb-24 max-w-4xl mx-auto">
+    <main className="min-h-screen px-5 sm:px-8 pt-12 pb-32 max-w-3xl mx-auto">
       
-      {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+      {/* 1. Header */}
+      <motion.header 
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-10"
+        className="mb-8"
       >
-        <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand/20 mb-4 ${showThrob ? 'animate-throb' : ''}`}>
-          <AlertCircle className="text-brand" size={40} />
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full bg-brand/15 flex items-center justify-center">
+            <HelpCircle className="text-brand" size={22} />
+          </div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Help & Support</h1>
         </div>
-        <h1 className="text-4xl font-bold text-white mb-2">How It Works</h1>
-        <p className="text-gray-light/70">Your complete guide to unlocking and reading stories</p>
-      </motion.div>
+        <p className="text-gray-light/70 text-base leading-relaxed">
+          Everything you need to browse, buy, unlock and read stories.
+        </p>
+      </motion.header>
 
-      {/* Step-by-Step Guide */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-          <ArrowRight className="text-brand" size={24} /> Getting Started
+      {/* 2. Quick Actions */}
+      <section className="mb-10">
+        <h2 className="text-sm font-semibold text-gray-light/50 uppercase tracking-wider mb-3">
+          What do you need help with?
         </h2>
-        <div className="space-y-4">
-          {steps.map((step, index) => {
-            const Icon = step.icon;
+        <div className="grid grid-cols-2 gap-3">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
             return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="glass rounded-2xl p-5 flex gap-4"
+              <a
+                key={action.id}
+                href={action.href}
+                className="glass rounded-xl p-4 flex items-center gap-3 hover:bg-white/10 transition-colors active:scale-95"
               >
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-xl bg-brand/20 flex items-center justify-center">
-                    <Icon className="text-brand" size={24} />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">
-                    {index + 1}. {step.title}
-                  </h3>
-                  <p className="text-sm text-gray-light/70 leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Payment Methods */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-          <CreditCard className="text-accent-blue" size={24} /> Payment Methods
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {paymentMethods.map((method, index) => {
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="glass rounded-2xl p-6 text-center"
-              >
-                <div className="relative inline-flex items-center justify-center mb-4">
-                  <div className={`absolute inset-0 ${method.color} opacity-20 blur-xl rounded-full`} />
-                  <img 
-                    src={method.image} 
-                    alt={method.name}
-                    className="relative w-32 h-32 object-contain rounded-xl"
-                    onError={(e) => {
-                      // Fallback if image doesn't load
-                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="128" height="128"%3E%3Crect fill="%237BC943" width="128" height="128" rx="8"/%3E%3Ctext fill="white" font-size="14" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage%3C/text%3E%3C/svg%3E';
-                    }}
-                  />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-1">{method.name}</h3>
-                <p className="text-sm text-gray-light/60 mb-2">{method.subtitle}</p>
-                <p className="text-2xl font-mono font-bold text-brand mb-2">{method.code}</p>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* WhatsApp Instructions */}
-      <section className="mb-12">
-        <div className="glass rounded-3xl p-6 md:p-8 border border-green-500/30 bg-green-500/5">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center">
-                <WhatsAppIcon size={28} />
-              </div>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-3">Important: Send Your Screenshot!</h2>
-              <p className="text-gray-light/80 leading-relaxed mb-4">
-                After completing your payment, <strong className="text-brand">take a screenshot</strong> of the payment confirmation and send it to our WhatsApp number along with:
-              </p>
-              <ul className="space-y-2 text-gray-light/70">
-                <li className="flex items-start gap-2">
-                  <span className="text-brand mt-1">•</span>
-                  <span>The story title you want to unlock</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-brand mt-1">•</span>
-                  <span>Your payment screenshot</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-brand mt-1">•</span>
-                  <span>Your full name for verification</span>
-                </li>
-              </ul>
-              <a 
-                // 3. Dynamic WhatsApp Link using the database settings
-                href={`https://wa.me/${settings?.whatsapp_number?.replace(/[^0-9]/g, '') || '265980720991'}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-full font-bold transition-all active:scale-95"
-              >
-                <WhatsAppIcon size={20} />
-                Contact on WhatsApp
+                <Icon className="text-brand flex-shrink-0" size={20} />
+                <span className="text-sm font-medium text-white">{action.label}</span>
               </a>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 3. Main Purchase Flow */}
+      <section id="purchase-flow" className="mb-12 scroll-mt-20">
+        <h2 className="text-xl font-bold text-white mb-6">How to Unlock a Story</h2>
+        <div className="relative pl-12 border-l-2 border-brand/20 space-y-6">
+          {purchaseSteps.map((step, index) => (
+            <motion.div 
+              key={index}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="relative"
+            >
+              <div className="absolute -left-16 w-8 h-8 rounded-full bg-navy-dark border-2 border-brand flex items-center justify-center text-xs font-bold text-brand">
+                {index + 1}
+              </div>
+              <h3 className="text-base font-semibold text-white mb-1">{step.title}</h3>
+              <p className="text-sm text-gray-light/70 leading-relaxed">{step.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Payment Methods */}
+      <section id="payment-methods" className="mb-12 scroll-mt-20">
+        <h2 className="text-xl font-bold text-white mb-1">Payment Methods</h2>
+        <p className="text-sm text-gray-light/60 mb-5">Choose any of the supported payment options below.</p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {paymentMethods.map((method, index) => (
+            <motion.div
+              key={method.name}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="glass rounded-xl p-4 flex items-center gap-4"
+            >
+              <img 
+                src={method.image} 
+                alt={`${method.name} logo`}
+                className="w-12 h-12 object-contain rounded-lg bg-white/5 p-1 flex-shrink-0"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-white truncate">{method.name}</h3>
+                <p className="text-xs text-gray-light/60 truncate">{method.subtitle}</p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-lg font-mono font-bold text-brand">{method.code}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. Interact with Stories */}
+      <section id="interactions" className="mb-12 scroll-mt-20">
+        <div className="glass rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-brand/15 flex items-center justify-center">
+              <Heart className="text-brand" size={20} />
+            </div>
+            <h2 className="text-xl font-bold text-white">Like, Rate, and Comment</h2>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <h3 className="text-sm font-semibold text-white mb-2">Like a Story</h3>
+              <p className="text-sm text-gray-light/70 leading-relaxed">
+                Tap the heart icon on the story card or inside the story details screen to add your like.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <h3 className="text-sm font-semibold text-white mb-2">Rate a Story</h3>
+              <p className="text-sm text-gray-light/70 leading-relaxed">
+                Finish the story first, then use the rating option in the story details modal to choose your stars.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <h3 className="text-sm font-semibold text-white mb-2">Leave a Comment</h3>
+              <p className="text-sm text-gray-light/70 leading-relaxed">
+                After you complete and rate the story, submit your comment with your name in the story details screen.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Unlock Code Info */}
-      <section>
-        <div className="glass rounded-3xl p-6 md:p-8">
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-            <CheckCircle className="text-accent-purple" size={24} /> About Unlock Codes
-          </h2>
-          <div className="space-y-4 text-gray-light/80">
-            <p>
-              Once I verify your payment (usually within <strong className="text-white">24 hours</strong>), you will receive a unique unlock code via WhatsApp.
-            </p>
-            <div className="bg-navy-dark/50 rounded-xl p-4 border-l-4 border-brand">
-              <p className="text-sm mb-2"><strong className="text-brand">How to use your code:</strong></p>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-gray-light/70">
-                <li>Tap on the locked story you want to unlock</li>
-                <li>Select "Select Payment Method" then "I already have an unlock code"</li>
-                <li>Enter the code exactly as sent</li>
-                <li>Tap "Unlock Story"</li>
-                <li>Start reading immediately!</li>
-              </ol>
+      {/* 6. Order a Hard Copy */}
+      <section id="hard-copy" className="mb-12 scroll-mt-20">
+        <div className="glass rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-accent-purple/15 flex items-center justify-center">
+              <ShoppingBag className="text-accent-purple" size={20} />
             </div>
-            <p className="text-sm text-gray-light/60">
-              <strong className="text-white">Note:</strong> Each code is unique and tied to your name. If you lose your browser data, contact me to have your code reset so you can read your story again without paying twice!
-            </p>
+            <h2 className="text-xl font-bold text-white">Order a Hard Copy</h2>
           </div>
+
+          <p className="text-sm text-gray-light/80 mb-4">
+            You can order a physical copy from the story details screen. The order form collects your name, WhatsApp number, and quantity.
+          </p>
+
+          <ol className="space-y-2 mb-4">
+            <li className="flex items-start gap-3 text-sm text-gray-light/70">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent-purple/20 text-accent-purple text-xs font-bold flex items-center justify-center mt-0.5">1</span>
+              <span>Open the story details and tap "Order Hard Copy".</span>
+            </li>
+            <li className="flex items-start gap-3 text-sm text-gray-light/70">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent-purple/20 text-accent-purple text-xs font-bold flex items-center justify-center mt-0.5">2</span>
+              <span>Enter your name, WhatsApp number, and how many copies you want.</span>
+            </li>
+            <li className="flex items-start gap-3 text-sm text-gray-light/70">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent-purple/20 text-accent-purple text-xs font-bold flex items-center justify-center mt-0.5">3</span>
+              <span>Submit the order and wait for a WhatsApp confirmation with delivery details.</span>
+            </li>
+          </ol>
+
+          <p className="text-sm text-gray-light/70">
+            Hard copy prices are based on the story price plus a standard printing and delivery fee. You will be contacted on WhatsApp to finalize your order.
+          </p>
+        </div>
+      </section>
+
+      {/* 7. WhatsApp Payment Verification */}
+      <section id="whatsapp-support" className="mb-12 scroll-mt-20">
+        <div className="glass rounded-2xl p-6 border border-green-500/30 bg-green-500/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-[#25D366]/20 flex items-center justify-center">
+              <WhatsAppIcon size={20} />
+            </div>
+            <h2 className="text-xl font-bold text-white">Paid? Send Your Screenshot</h2>
+          </div>
+          
+          <p className="text-sm text-gray-light/80 mb-4">
+            After completing payment, please follow these steps:
+          </p>
+          
+          <ol className="space-y-2 mb-6">
+            {whatsappSteps.map((step, index) => (
+              <li key={index} className="flex items-start gap-3 text-sm text-gray-light/70">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand/20 text-brand text-xs font-bold flex items-center justify-center mt-0.5">
+                  {index + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+
+          <WhatsAppButton />
+        </div>
+      </section>
+
+      {/* 8. Unlock Code Section */}
+      <section id="unlock-code" className="mb-12 scroll-mt-20">
+        <div className="glass rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-accent-purple/20 flex items-center justify-center">
+              <KeyRound className="text-accent-purple" size={20} />
+            </div>
+            <h2 className="text-xl font-bold text-white">I Have an Unlock Code</h2>
+          </div>
+          
+          <p className="text-sm text-gray-light/80 mb-4">
+            If you have already received your code, follow these steps to start reading:
+          </p>
+          
+          <ol className="space-y-2">
+            {unlockSteps.map((step, index) => (
+              <li key={index} className="flex items-start gap-3 text-sm text-gray-light/70">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent-purple/20 text-accent-purple text-xs font-bold flex items-center justify-center mt-0.5">
+                  {index + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* 7. FAQ Section */}
+      <section id="faq" className="mb-12 scroll-mt-20">
+        <h2 className="text-xl font-bold text-white mb-5">Frequently Asked Questions</h2>
+        <div className="space-y-2">
+          {faqs.map((faq, index) => (
+            <div key={index} className="glass rounded-xl overflow-hidden">
+              <button
+                onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                aria-expanded={openFaq === index}
+                aria-controls={`faq-${index}`}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
+              >
+                <span className="text-sm font-medium text-white pr-4">{faq.q}</span>
+                <ChevronDown className={`text-gray-light/50 flex-shrink-0 transition-transform duration-200 ${openFaq === index ? 'rotate-180' : ''}`} size={18} />
+              </button>
+              <AnimatePresence>
+                {openFaq === index && (
+                  <motion.div
+                    id={`faq-${index}`}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <p className="px-4 pb-4 text-sm text-gray-light/70 leading-relaxed">
+                      {faq.a}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 8. Final Support CTA */}
+      <section className="mb-8">
+        <div className="glass rounded-2xl p-6 text-center">
+          <h2 className="text-lg font-bold text-white mb-2">Still need help?</h2>
+          <p className="text-sm text-gray-light/70 mb-5 max-w-sm mx-auto">
+            Contact Msarchive on WhatsApp and include your story title and payment details.
+          </p>
+          <WhatsAppButton />
         </div>
       </section>
 

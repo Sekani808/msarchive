@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { BookOpen, Plus, Trash2, Lock, Unlock, Edit } from "lucide-react";
+import { BookOpen, Plus, Trash2, Lock, Edit } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { motion } from "framer-motion";
@@ -56,75 +56,84 @@ export default function AdminStoriesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-20">
       <Toaster theme="dark" position="top-center" />
-      <div className="flex justify-between items-center">
+      
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-2">
         <div>
-          <h1 className="text-3xl font-bold text-white">Stories</h1>
-          <p className="text-gray-light/60 mt-1">Manage your archive.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Stories</h1>
+          <p className="text-gray-light/60 mt-1 text-sm sm:text-base">Manage your archive.</p>
         </div>
-        <Link href="/admin/stories/new">
-          <Button variant="primary">
+        <Link href="/admin/stories/new" className="w-full sm:w-auto">
+          <Button variant="primary" className="w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 active:scale-[0.98] transition-transform py-2.5 px-4">
             <Plus size={18} />
-            Upload Story
+            <span className="hidden sm:inline">Upload Story</span>
+            <span className="sm:hidden">New Story</span>
           </Button>
         </Link>
       </div>
 
       {isLoading ? (
-        <p className="text-gray-light/50">Loading stories...</p>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-gray-light/50 animate-pulse">Loading stories...</p>
+        </div>
       ) : stories.length === 0 ? (
-        <div className="glass rounded-2xl p-12 text-center">
-          <BookOpen className="mx-auto text-gray-light/30 mb-4" size={48} />
-          <p className="text-gray-light/50">No stories yet. Upload your first one!</p>
+        <div className="glass rounded-2xl p-12 text-center border border-white/5">
+          <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center mb-4">
+            <BookOpen className="text-gray-light/40" size={32} />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-1">No stories yet</h3>
+          <p className="text-gray-light/50 text-sm">Upload your first story to get started.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {stories.map((story, index) => (
             <motion.div
               key={story.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="glass rounded-2xl overflow-hidden flex flex-col"
+              className="glass rounded-2xl overflow-hidden flex flex-col border border-white/5 hover:border-white/10 transition-colors group shadow-lg"
             >
-              <div className="aspect-video w-full bg-navy-dark relative">
+              <div className="aspect-[16/10] sm:aspect-video w-full bg-navy-dark relative overflow-hidden">
                 {story.cover_image ? (
-                  <img src={story.cover_image} alt={story.title} className="w-full h-full object-cover" />
+                  <img src={story.cover_image} alt={story.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-light/30">
-                    <BookOpen size={32} />
+                  <div className="w-full h-full flex items-center justify-center text-gray-light/30 bg-gradient-to-br from-navy-dark to-navy">
+                    <BookOpen size={40} />
                   </div>
                 )}
-                <div className="absolute top-2 right-2">
+                <div className="absolute top-3 right-3">
                   {story.is_locked ? (
-                    <span className="px-2 py-1 text-[10px] bg-accent-purple text-white rounded-full flex items-center gap-1">
-                      <Lock size={10} /> {story.price_mwk} MWK
+                    <span className="px-2.5 py-1 text-xs bg-accent-purple/90 backdrop-blur-md text-white rounded-full flex items-center gap-1.5 shadow-lg font-medium">
+                      <Lock size={12} /> {story.price_mwk} MWK
                     </span>
                   ) : (
-                    <span className="px-2 py-1 text-[10px] bg-brand text-navy-dark rounded-full font-bold">FREE</span>
+                    <span className="px-2.5 py-1 text-xs bg-emerald-500/90 backdrop-blur-md text-white rounded-full font-bold shadow-lg tracking-wide">FREE</span>
                   )}
                 </div>
               </div>
               
-              <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-white text-lg line-clamp-1">{story.title}</h3>
-                <p className="text-sm text-gray-light/60 line-clamp-2 mt-1 flex-1">{story.description}</p>
+              <div className="p-4 sm:p-5 flex-1 flex flex-col">
+                <h3 className="font-bold text-white text-lg sm:text-xl line-clamp-1">{story.title}</h3>
+                <p className="text-sm text-gray-light/60 line-clamp-2 mt-2 flex-1 leading-relaxed">{story.description}</p>
                 
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/5 gap-2">
-                  <span className="text-xs text-gray-light/40">{story.category}</span>
-                  <div className="flex gap-2">
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/5">
+                  <span className="text-xs text-gray-light/60 bg-white/5 px-2.5 py-1 rounded-md font-medium">{story.category}</span>
+                  <div className="flex gap-1">
                     <Link 
                       href={`/admin/stories/${story.id}`}
-                      className="p-2 text-accent-blue hover:bg-accent-blue/10 rounded-full transition-colors"
+                      className="p-2.5 text-accent-blue hover:bg-accent-blue/10 active:bg-accent-blue/20 rounded-full transition-colors"
+                      aria-label="Edit story"
                     >
-                      <Edit size={16} />
+                      <Edit size={18} />
                     </Link>
                     <button 
                       onClick={() => handleDelete(story.id)}
-                      className="p-2 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
+                      className="p-2.5 text-red-400 hover:bg-red-500/10 active:bg-red-500/20 rounded-full transition-colors"
+                      aria-label="Delete story"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </div>

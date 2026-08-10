@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import BottomNavWrapper from "@/components/layout/BottomNavWrapper"; // Import the wrapper
+import BottomNavWrapper from "@/components/layout/BottomNavWrapper"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-navy-dark text-gray-light min-h-screen`}
       >
-        <div className="pb-24">
-          {children}
-        </div>
+        {/* Removed hardcoded pb-24 to prevent unwanted padding on Admin/Reader pages */}
+        {children}
         
-        {/* Use the wrapper instead of the direct BottomNav */}
         <BottomNavWrapper />
       </body>
     </html>

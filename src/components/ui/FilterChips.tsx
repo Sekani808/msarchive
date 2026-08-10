@@ -21,17 +21,13 @@ export default function FilterChips({ activeFilter, onFilterChange }: FilterChip
         .not("category", "is", null);
 
       if (data && data.length > 0) {
-        // Extract unique categories
         const uniqueCategories = [...new Set(data.map(story => story.category).filter(Boolean))];
-        
-        // Combine with default filters, avoiding duplicates
         const allCategories = [
           "All",
           "Free",
           "Premium",
           ...uniqueCategories.sort()
         ];
-        
         setCategories(allCategories);
       }
     };
@@ -40,19 +36,18 @@ export default function FilterChips({ activeFilter, onFilterChange }: FilterChip
   }, []);
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6">
+    <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6 snap-x snap-mandatory">
       {categories.map((cat) => {
         const isActive = activeFilter === cat;
         return (
           <motion.button
             key={cat}
             onClick={() => onFilterChange(cat)}
-            // The "Duolingo" mechanics: 3D border, press down effect
-            whileTap={{ scale: 0.95, y: 2 }}
-            className={`relative px-5 py-2.5 rounded-2xl text-sm font-bold whitespace-nowrap transition-all select-none ${
+            whileTap={{ scale: 0.96 }}
+            className={`relative px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all select-none border ${
               isActive 
-                ? "bg-brand text-navy-dark border-b-4 border-b-[#5a9e2f] shadow-[0_4px_0_#5a9e2f]" 
-                : "bg-navy text-gray-light/70 border-b-4 border-b-black shadow-[0_4px_0_#000000] hover:bg-white/5"
+                ? "bg-brand text-navy-dark border-brand shadow-[0_0_12px_rgba(123,201,67,0.3)]" 
+                : "bg-white/5 text-gray-light/80 border-white/10 hover:bg-white/10 hover:border-white/20"
             }`}
           >
             {cat}
