@@ -44,7 +44,7 @@ export default function Hero() {
     if (isReducedMotion) return;
     const fallbackTimer = setTimeout(() => {
       handleVideoEnded();
-    }, 15000); // 15 seconds fallback
+    }, 30000); // Increased to 30 seconds fallback
     return () => clearTimeout(fallbackTimer);
   }, [currentVideoIndex, handleVideoEnded, isReducedMotion]);
 
@@ -58,11 +58,11 @@ export default function Hero() {
     // Ensure active video has correct src and is playing
     if (activeRef) {
       const src = heroVideos[currentVideoIndex];
-      if (activeRef.src !== src) {
+      // FIX: Use endsWith to handle absolute vs relative URL mismatch
+      if (!activeRef.src || !activeRef.src.endsWith(src)) {
         activeRef.src = src;
         activeRef.load();
       }
-      // play if not already
       activeRef.muted = true;
       activeRef.playsInline = true;
       activeRef.play().catch(() => {});
@@ -72,7 +72,8 @@ export default function Hero() {
     const nextIndex = (currentVideoIndex + 1) % heroVideos.length;
     if (bgRef) {
       const nextSrc = heroVideos[nextIndex];
-      if (bgRef.src !== nextSrc) {
+      // FIX: Use endsWith to handle absolute vs relative URL mismatch
+      if (!bgRef.src || !bgRef.src.endsWith(nextSrc)) {
         bgRef.src = nextSrc;
         bgRef.load();
       }
