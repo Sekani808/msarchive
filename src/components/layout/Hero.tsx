@@ -152,6 +152,8 @@ export default function Hero() {
         <>
           <video
             ref={videoARef}
+            src={heroVideos[0]}
+            autoPlay
             className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-[1500ms] ease-in-out ${isAActive ? "opacity-100" : "opacity-0"}`}
             muted
             playsInline
@@ -160,6 +162,8 @@ export default function Hero() {
 
           <video
             ref={videoBRef}
+            src={heroVideos[1]}
+            autoPlay
             className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-[1500ms] ease-in-out ${isAActive ? "opacity-0" : "opacity-100"}`}
             muted
             playsInline
