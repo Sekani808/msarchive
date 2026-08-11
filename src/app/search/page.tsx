@@ -94,6 +94,8 @@ export default function HelpPage() {
     { q: "What if my story does not unlock?", a: "Ensure you entered the code exactly as received. If it still fails, contact us on WhatsApp for assistance." },
     { q: "What if I lose my unlock code?", a: "Contact us on WhatsApp with your name and story title, and we will help you regain access without paying twice." },
     { q: "Are the free stories really free?", a: "Yes, free stories are completely free to read and do not require payment or an unlock code." },
+    { q: "How do I sign out?", a: "Open the Reading dashboard and click the 'Logout' button in the header — you'll be returned to the homepage." },
+    { q: "Why do videos play behind sign-in or sign-up cards?", a: "Short looping background videos are used for atmosphere on the sign in and sign up pages; they are muted and optimized for performance and accessibility." },
   ];
 
   const WhatsAppButton = () => (

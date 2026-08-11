@@ -115,11 +115,11 @@ export default function Hero() {
             transition={{ type: "spring", stiffness: 100, damping: 15, delay: 1.2 }}
             className="w-full sm:w-auto"
           >
-            <Link href="/library" className="block w-full">
+            <Link href="/signup" className="block w-full">
               <div className="w-full sm:w-auto flex justify-center">
                 <Button variant="primary">
                   <BookOpen size={18} />
-                  Start Reading
+                  Sign Up
                 </Button>
               </div>
             </Link>

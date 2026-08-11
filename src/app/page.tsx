@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Hero from "@/components/layout/Hero";
 import StoryCard from "@/components/ui/StoryCard";
@@ -8,8 +9,10 @@ import UnlockModal from "@/components/ui/UnlockModal";
 import { supabase } from "@/lib/supabase";
 import { Story } from "@/types/story";
 import { Flame } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Home() {
+  const router = useRouter();
   const [trendingStories, setTrendingStories] = useState<Story[]>([]);
   const [unlockingStory, setUnlockingStory] = useState<Story | null>(null);
 
@@ -54,7 +57,15 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
               >
-                <StoryCard story={story} onUnlockClick={setUnlockingStory} />
+                <StoryCard story={story} onUnlockClick={async (storyData) => {
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) {
+                    toast.error("Please sign in before unlocking premium stories.");
+                    router.push("/login");
+                    return;
+                  }
+                  setUnlockingStory(storyData);
+                }} />
               </motion.div>
             ))}
           </div>

@@ -1,7 +1,8 @@
 // src/components/reader/Reader.tsx
+// src/components/reader/Reader.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -67,6 +68,7 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [commentUsername, setCommentUsername] = useState("");
   const [commentText, setCommentText] = useState("");
+  const [authUsername, setAuthUsername] = useState<string | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   useEffect(() => {
@@ -109,10 +111,6 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
     setLastRead(storyId, currentChapterIndex);
   }, [currentChapterIndex, storyId, setLastRead]);
 
-  /**
-   * Fetch existing completion/rating/comment state from Supabase.
-   * This keeps Reader consistent across page reloads and navigation.
-   */
   useEffect(() => {
     let cancelled = false;
 
@@ -171,6 +169,26 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
       if (commentRes.data) {
         setHasCommented(true);
       }
+
+      const authName =
+        (user.user_metadata?.username as string | undefined) ??
+        (user.user_metadata?.name as string | undefined);
+
+      if (authName && !cancelled) {
+        setAuthUsername(authName);
+        setCommentUsername(authName);
+      } else if (!authName && !cancelled) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profile?.username) {
+          setAuthUsername(profile.username);
+          setCommentUsername(profile.username);
+        }
+      }
     };
 
     fetchExistingState();
@@ -180,34 +198,34 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
     };
   }, [storyId]);
 
-  /**
-   * Scroll handling for progress, controls, and completion detection.
-   */
+  // FIX: Extracted markAsCompleted to be reusable and robust
+  const markAsCompleted = useCallback(async () => {
+    if (hasCompletedRef.current) return;
+    hasCompletedRef.current = true;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("story_completions")
+        .upsert({ story_id: storyId, user_id: user.id }, { onConflict: "story_id,user_id" });
+
+      if (!error) {
+        setIsCompleted(true);
+      } else {
+        console.error("Completion tracking failed:", error);
+        hasCompletedRef.current = false; // Reset on failure so it can retry
+      }
+    } catch (error) {
+      console.error("Completion tracking failed:", error);
+      hasCompletedRef.current = false;
+    }
+  }, [storyId]);
+
+  // Scroll handling for progress, controls, and completion detection (Long Chapters)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
-    const markAsCompleted = async () => {
-      try {
-        const {
-          data: { user }
-        } = await supabase.auth.getUser();
-
-        if (!user) return;
-
-        const { error } = await supabase
-          .from("story_completions")
-          .upsert({ story_id: storyId, user_id: user.id }, { onConflict: "story_id,user_id" });
-
-        if (!error) {
-          setIsCompleted(true);
-        } else {
-          console.error("Completion tracking failed:", error);
-        }
-      } catch (error) {
-        console.error("Completion tracking failed:", error);
-      }
-    };
 
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
@@ -227,21 +245,46 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
       lastScrollTop.current = scrollTop <= 0 ? 0 : scrollTop;
 
       const isLastChapter = currentChapterIndexRef.current === chapters.length - 1;
-      const isAtBottom = scrollableHeight > 0 && scrollHeight - scrollTop - clientHeight < 50;
+      // FIX: If scrollableHeight is 0, they are technically at the bottom immediately
+      const isAtBottom = scrollableHeight <= 0 || (scrollHeight - scrollTop - clientHeight < 50);
 
       if (isLastChapter && isAtBottom && !hasCompletedRef.current) {
-        hasCompletedRef.current = true;
         markAsCompleted();
       }
     };
 
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [storyId, chapters.length]);
+  }, [storyId, chapters.length, markAsCompleted]);
 
-  /**
-   * Existing story view tracking.
-   */
+  // FIX: Detect Short Chapters that don't trigger scroll events
+  useEffect(() => {
+    const isLastChapter = currentChapterIndex === chapters.length - 1;
+    if (!isLastChapter || hasCompletedRef.current) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const checkTimer = setTimeout(() => {
+      const scrollableHeight = container.scrollHeight - container.clientHeight;
+      // If the chapter is short (doesn't need scrolling or barely needs it)
+      if (scrollableHeight <= 50) {
+        const completeTimer = setTimeout(() => {
+          markAsCompleted();
+        }, 2500); // Wait 2.5s to ensure they actually read it
+        
+        (container as any)._completeTimer = completeTimer;
+      }
+    }, 300); // Wait 300ms for DOM to render
+
+    return () => {
+      clearTimeout(checkTimer);
+      if ((container as any)?._completeTimer) {
+        clearTimeout((container as any)._completeTimer);
+      }
+    };
+  }, [currentChapterIndex, chapters.length, markAsCompleted]);
+
   useEffect(() => {
     let deviceId = localStorage.getItem("msarchive_device_id");
     if (!deviceId) {
@@ -318,8 +361,26 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
     }
   };
 
+  const handleStartComment = async () => {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      toast.error("Please sign in to comment.");
+      router.push("/login");
+      return;
+    }
+
+    if (authUsername) {
+      setCommentUsername(authUsername);
+    }
+
+    setShowCommentForm(true);
+  };
+
   const handleSubmitComment = async () => {
-    const username = commentUsername.trim();
+    const username = authUsername ? authUsername.trim() : commentUsername.trim();
     const comment = commentText.trim();
 
     if (!username) {
@@ -350,7 +411,7 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        toast.error("Please sign in to comment.");
+        toast.error("You sign in to comment.");
         setIsSubmittingComment(false);
         return;
       }
@@ -568,7 +629,7 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
                       ) : (
                         !showCommentForm && (
                           <button
-                            onClick={() => setShowCommentForm(true)}
+                            onClick={handleStartComment}
                             className={subtleButtonClass}
                           >
                             <MessageSquare size={18} /> Leave a Comment
@@ -594,9 +655,10 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
                         <input
                           value={commentUsername}
                           onChange={(e) => setCommentUsername(e.target.value)}
+                          disabled={Boolean(authUsername)}
                           maxLength={MAX_USERNAME_LENGTH}
                           placeholder="Your display name"
-                          className={inputClass}
+                          className={`${inputClass} ${authUsername ? "cursor-not-allowed opacity-70" : ""}`}
                         />
                         <p className={`mt-1 text-xs ${controlText} opacity-60`}>
                           {commentUsername.length} / {MAX_USERNAME_LENGTH}
@@ -625,8 +687,8 @@ export default function Reader({ storyId, title, chapters }: ReaderProps) {
                           onClick={handleSubmitComment}
                           disabled={
                             isSubmittingComment ||
-                            !commentUsername.trim() ||
-                            !commentText.trim()
+                            !commentText.trim() ||
+                            (!authUsername && !commentUsername.trim())
                           }
                           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-brand text-navy-dark font-bold transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                         >

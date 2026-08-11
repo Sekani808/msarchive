@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock, Unlock, CheckCircle, Loader2, ArrowLeft, ArrowRight, Copy } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "./Button";
 import { Story } from "@/types/story";
 import { useUnlockStore } from "@/store/useUnlockStore";
@@ -67,6 +68,7 @@ interface UnlockModalProps {
 }
 
 export default function UnlockModal({ story, onClose }: UnlockModalProps) {
+  const router = useRouter();
   const [step, setStep] = useState<'select-payment' | 'choose-method' | 'payment-instructions' | 'enter-code' | 'success'>('select-payment');
   const [code, setCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -74,6 +76,16 @@ export default function UnlockModal({ story, onClose }: UnlockModalProps) {
   const unlockStory = useUnlockStore((state) => state.unlockStory);
   
   const { settings, fetchSettings } = useSettingsStore();
+
+  const ensureLoggedIn = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to unlock this story.");
+      router.push("/login");
+      return null;
+    }
+    return user;
+  };
 
   useEffect(() => {
     if (!settings) fetchSettings();
@@ -90,6 +102,9 @@ export default function UnlockModal({ story, onClose }: UnlockModalProps) {
 
   // SECURE DATABASE VERIFICATION LOGIC
   const handleVerifyCode = async () => {
+    const user = await ensureLoggedIn();
+    if (!user) return;
+
     if (!code.trim()) {
       toast.error("Please enter a code.");
       return;

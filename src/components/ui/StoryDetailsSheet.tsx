@@ -289,21 +289,61 @@ export default function StoryDetailsSheet({
     setLoadingMore(false);
   };
 
-  const handleRead = () => {
+  const handleRead = async () => {
     if (!story) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to continue reading.");
+      router.push("/login");
+      return;
+    }
     router.push(`/read/${story.id}`);
   };
 
-  const handleUnlock = () => {
+  const handleUnlock = async () => {
     if (!story) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to unlock stories.");
+      router.push("/login");
+      return;
+    }
     onUnlockClick(story);
     onClose();
   };
 
-  const handleAccessCode = () => {
+  const handleAccessCode = async () => {
     if (!story) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to unlock stories.");
+      router.push("/login");
+      return;
+    }
     onUnlockClick(story);
     onClose();
+  };
+
+  const handleOpenHardCopy = async () => {
+    if (!story) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to order a hard copy.");
+      router.push("/login");
+      return;
+    }
+    setHardCopyOrderOpen(true);
+  };
+
+  const handleToggleLikeClick = async () => {
+    if (!story) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to like stories.");
+      router.push("/login");
+      return;
+    }
+    onToggleLike(story.id, Boolean(story.is_liked));
   };
 
   const backdropVariants = {
@@ -417,7 +457,7 @@ export default function StoryDetailsSheet({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onToggleLike(story.id, Boolean(story.is_liked));
+                        handleToggleLikeClick();
                       }}
                       className="flex items-center gap-1.5 hover:scale-105 transition-transform active:scale-95"
                     >
@@ -501,7 +541,7 @@ export default function StoryDetailsSheet({
                 <Button
                   variant="secondary"
                   className="w-full justify-center gap-2"
-                  onClick={() => setHardCopyOrderOpen(true)}
+                  onClick={handleOpenHardCopy}
                 >
                   <ShoppingBag size={18} /> Order Hard Copy
                 </Button>
