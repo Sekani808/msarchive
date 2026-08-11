@@ -9,7 +9,7 @@ import UnlockModal from "@/components/ui/UnlockModal";
 import { supabase } from "@/lib/supabase";
 import { Story } from "@/types/story";
 import { Flame } from "lucide-react";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner"; // Added Toaster
 
 export default function Home() {
   const router = useRouter();
@@ -18,11 +18,16 @@ export default function Home() {
 
   useEffect(() => {
     const fetchTrending = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("stories")
         .select("*")
         .order("published_date", { ascending: false })
         .limit(3); 
+      
+      if (error) {
+        console.error("Error fetching trending stories:", error.message);
+        return;
+      }
       
       if (data) setTrendingStories(data);
     };
@@ -33,6 +38,9 @@ export default function Home() {
   return (
     // Added pb-32 to ensure the fixed BottomNav never overlaps the last story card
     <main className="min-h-screen bg-navy-dark pb-32 md:pb-24">
+      {/* Mount the Toaster here if it isn't in your global layout.tsx */}
+      <Toaster theme="dark" position="top-center" richColors />
+
       <Hero />
       
       {/* Trending / New Stories Section */}

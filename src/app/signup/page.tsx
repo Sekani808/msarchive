@@ -97,7 +97,7 @@ export default function SignUpPage() {
     "/assets/videos/hero/hero-4.mp4",
     "/assets/videos/hero/hero-5.mp4",
   ];
-  const [videoKey] = useState(0);
+  
   const videoARef = useRef<HTMLVideoElement | null>(null);
   const videoBRef = useRef<HTMLVideoElement | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -110,7 +110,8 @@ export default function SignUpPage() {
 
     if (active) {
       const src = heroVideos[currentVideoIndex];
-      if (active.src !== src) {
+      // FIX: Use endsWith to handle absolute vs relative URL mismatch
+      if (!active.src || !active.src.endsWith(src)) {
         active.src = src;
         active.load();
       }
@@ -122,7 +123,8 @@ export default function SignUpPage() {
     const nextIndex = (currentVideoIndex + 1) % heroVideos.length;
     if (bg) {
       const nextSrc = heroVideos[nextIndex];
-      if (bg.src !== nextSrc) {
+      // FIX: Use endsWith to handle absolute vs relative URL mismatch
+      if (!bg.src || !bg.src.endsWith(nextSrc)) {
         bg.src = nextSrc;
         bg.load();
       }
@@ -132,17 +134,20 @@ export default function SignUpPage() {
     }
 
     const onEnded = () => {
-      // start incoming
+      // FIX: Advance the index immediately so state stays in sync and avoids double-rendering
+      setCurrentVideoIndex((i) => (i + 1) % heroVideos.length);
+
       if (bg) {
         try { bg.currentTime = 0; } catch {}
         bg.play().catch(() => {});
       }
+      
       setIsAActive((v) => !v);
+      
       setTimeout(() => {
         if (active) {
           try { active.pause(); active.currentTime = 0; } catch {}
         }
-        setCurrentVideoIndex((i) => (i + 1) % heroVideos.length);
       }, transitionDurationMs + 50);
     };
 
@@ -156,6 +161,7 @@ export default function SignUpPage() {
       <video
         ref={videoARef}
         className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-[1500ms] ease-in-out ${isAActive ? "opacity-100" : "opacity-0"}`}
+        autoPlay
         muted
         playsInline
         preload="auto"
@@ -163,6 +169,7 @@ export default function SignUpPage() {
       <video
         ref={videoBRef}
         className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-[1500ms] ease-in-out ${isAActive ? "opacity-0" : "opacity-100"}`}
+        autoPlay
         muted
         playsInline
         preload="auto"
