@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -99,17 +98,74 @@ export default function SignUpPage() {
     "/assets/videos/hero/hero-5.mp4",
   ];
   const [videoKey] = useState(0);
+  const videoARef = useRef<HTMLVideoElement | null>(null);
+  const videoBRef = useRef<HTMLVideoElement | null>(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isAActive, setIsAActive] = useState(true);
+  const transitionDurationMs = 1500;
+
+  useEffect(() => {
+    const active = isAActive ? videoARef.current : videoBRef.current;
+    const bg = isAActive ? videoBRef.current : videoARef.current;
+
+    if (active) {
+      const src = heroVideos[currentVideoIndex];
+      if (active.src !== src) {
+        active.src = src;
+        active.load();
+      }
+      active.muted = true;
+      active.playsInline = true;
+      active.play().catch(() => {});
+    }
+
+    const nextIndex = (currentVideoIndex + 1) % heroVideos.length;
+    if (bg) {
+      const nextSrc = heroVideos[nextIndex];
+      if (bg.src !== nextSrc) {
+        bg.src = nextSrc;
+        bg.load();
+      }
+      bg.muted = true;
+      bg.playsInline = true;
+      try { bg.pause(); bg.currentTime = 0; } catch {}
+    }
+
+    const onEnded = () => {
+      // start incoming
+      if (bg) {
+        try { bg.currentTime = 0; } catch {}
+        bg.play().catch(() => {});
+      }
+      setIsAActive((v) => !v);
+      setTimeout(() => {
+        if (active) {
+          try { active.pause(); active.currentTime = 0; } catch {}
+        }
+        setCurrentVideoIndex((i) => (i + 1) % heroVideos.length);
+      }, transitionDurationMs + 50);
+    };
+
+    active?.addEventListener("ended", onEnded);
+    return () => active?.removeEventListener("ended", onEnded);
+  }, [currentVideoIndex, isAActive]);
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-12 bg-navy-dark relative">
-      <motion.video
-        key={videoKey}
-        autoPlay
+      {/* Dual preloaded videos for smooth crossfade */}
+      <video
+        ref={videoARef}
+        className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-[1500ms] ease-in-out ${isAActive ? "opacity-100" : "opacity-0"}`}
         muted
         playsInline
-        loop
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        src={heroVideos[0]}
+        preload="auto"
+      />
+      <video
+        ref={videoBRef}
+        className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-[1500ms] ease-in-out ${isAActive ? "opacity-0" : "opacity-100"}`}
+        muted
+        playsInline
+        preload="auto"
       />
       <div className="absolute inset-0 bg-navy-dark/70 z-10" />
 

@@ -1,11 +1,11 @@
 // src/components/layout/Hero.tsx
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "../ui/Button";
 import { BookOpen, Library } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const heroVideos = [
   "/assets/videos/hero/hero-1.mp4",
@@ -19,8 +19,12 @@ const taglineWords = "Stories that stay with you long after the last page.".spli
 
 export default function Hero() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [key, setKey] = useState(0);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const [key, setKey] = useState(0);
+  const videoARef = useRef<HTMLVideoElement | null>(null);
+  const videoBRef = useRef<HTMLVideoElement | null>(null);
+  const [isAActive, setIsAActive] = useState(true);
+  const transitionDurationMs = 1500; // 1.5s crossfade
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -30,6 +34,7 @@ export default function Hero() {
 
   const handleVideoEnded = useCallback(() => {
     if (isReducedMotion) return;
+    // Advance index — actual swap handled by crossfade logic
     setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % heroVideos.length);
     setKey((k) => k + 1);
   }, [isReducedMotion]);
@@ -43,27 +48,125 @@ export default function Hero() {
     return () => clearTimeout(fallbackTimer);
   }, [currentVideoIndex, handleVideoEnded, isReducedMotion]);
 
+  // Preload and manage two-video crossfade loop
+  useEffect(() => {
+    if (isReducedMotion) return;
+
+    const activeRef = isAActive ? videoARef.current : videoBRef.current;
+    const bgRef = isAActive ? videoBRef.current : videoARef.current;
+
+    // Ensure active video has correct src and is playing
+    if (activeRef) {
+      const src = heroVideos[currentVideoIndex];
+      if (activeRef.src !== src) {
+        activeRef.src = src;
+        activeRef.load();
+      }
+      // play if not already
+      activeRef.muted = true;
+      activeRef.playsInline = true;
+      activeRef.play().catch(() => {});
+    }
+
+    // Prepare background video (next index) for a fast transition
+    const nextIndex = (currentVideoIndex + 1) % heroVideos.length;
+    if (bgRef) {
+      const nextSrc = heroVideos[nextIndex];
+      if (bgRef.src !== nextSrc) {
+        bgRef.src = nextSrc;
+        bgRef.load();
+      }
+      bgRef.muted = true;
+      bgRef.playsInline = true;
+      // keep paused — we'll play it at transition time to ensure it starts at 0
+      try { bgRef.pause(); bgRef.currentTime = 0; } catch {}
+    }
+
+    // When active video ends, crossfade to background (which should be preloaded)
+    const onEnded = async () => {
+      const incoming = bgRef;
+      const outgoing = activeRef;
+
+      if (!incoming) return;
+
+      // Wait for incoming to have enough data (max wait 2s)
+      const canPlayPromise = new Promise<void>((resolve) => {
+        if (incoming.readyState >= 3) return resolve();
+        const onCan = () => {
+          incoming.removeEventListener("canplaythrough", onCan);
+          resolve();
+        };
+        incoming.addEventListener("canplaythrough", onCan);
+        // timeout fallback
+        setTimeout(() => {
+          incoming.removeEventListener("canplaythrough", onCan);
+          resolve();
+        }, 2000);
+      });
+
+      await canPlayPromise;
+
+      // Advance the index so sources stay in sync
+      setCurrentVideoIndex((prev) => (prev + 1) % heroVideos.length);
+
+      // Start incoming from 0 and play
+      try { incoming.currentTime = 0; } catch {}
+      incoming.play().catch(() => {});
+
+      // flip active flag to trigger CSS crossfade
+      setIsAActive((v) => !v);
+
+      // after transition, pause outgoing and reset it for reuse
+      setTimeout(() => {
+        if (outgoing) {
+          try { outgoing.pause(); outgoing.currentTime = 0; } catch {}
+        }
+      }, transitionDurationMs + 50);
+    };
+
+    if (activeRef) activeRef.addEventListener("ended", onEnded);
+
+    return () => {
+      if (activeRef) activeRef.removeEventListener("ended", onEnded);
+    };
+  }, [currentVideoIndex, isAActive, isReducedMotion]);
+
   return (
     // Used 100svh for better mobile viewport handling (accounts for browser address bars)
     <section className="relative h-[100svh] w-full flex items-center justify-center overflow-hidden">
       
       {/* Video Background */}
-      <AnimatePresence mode="wait">
-        <motion.video
+      {isReducedMotion ? (
+        <video
           key={key}
           autoPlay
-          loop={isReducedMotion} // Loop single video if reduced motion is preferred
+          loop
           muted
           playsInline
           onEnded={handleVideoEnded}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.5, ease: "easeInOut" }}
           className="absolute inset-0 w-full h-full object-cover z-0"
-          src={heroVideos[isReducedMotion ? 0 : currentVideoIndex]}
+          src={heroVideos[0]}
+          preload="auto"
         />
-      </AnimatePresence>
+      ) : (
+        <>
+          <video
+            ref={videoARef}
+            className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-[1500ms] ease-in-out ${isAActive ? "opacity-100" : "opacity-0"}`}
+            muted
+            playsInline
+            preload="auto"
+          />
+
+          <video
+            ref={videoBRef}
+            className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-[1500ms] ease-in-out ${isAActive ? "opacity-0" : "opacity-100"}`}
+            muted
+            playsInline
+            preload="auto"
+          />
+        </>
+      )}
 
       {/* Dark Overlay */}
       <div className="absolute inset-0 bg-navy-dark/70 z-10" />
