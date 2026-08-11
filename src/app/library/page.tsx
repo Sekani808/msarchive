@@ -237,15 +237,6 @@ export default function LibraryPage() {
                   story={story} 
                   onSelectStory={setSelectedStory}
                   onToggleLike={handleToggleLike}
-                  onUnlockClick={async (storyData) => {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) {
-                      toast.error("Please sign in before unlocking premium stories.");
-                      router.push("/login");
-                      return;
-                    }
-                    setUnlockingStory(storyData);
-                  }}
                 />
               ))}
             </div>
